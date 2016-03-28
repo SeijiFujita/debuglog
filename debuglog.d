@@ -32,10 +32,7 @@ enum logStatus {
 void outLog(string file = __FILE__, int line = __LINE__, T...)(T t)
 {
     version (useDebugLog) {
-        // _outLogV(format("%s(%d)-[%s]", file, line, getDateTimeStr()), t);
-        // _outLogV(format("%s(%d)[%s]", file, line, getDateTimeStr()), t);
-        // for emacs
-        _outLogV(format("%s:%d:[%s]", file, line, getDateTimeStr()), t);
+        _outLogV(format("%s:%d:[%s]", file, line, _getDateTimeStr()), t);
     }
 }
 
@@ -45,7 +42,7 @@ void setDebugLog(int flag = 1)
   version (useDebugLog) {
     string ext;
     version (useAddDateExt) {
-        ext = "debug_log" ~ getDateStr() ~ ".txt";
+        ext = "debug_log" ~ _getDateStr() ~ ".txt";
     } else {
         ext = "debug_log.txt";
     }
@@ -68,142 +65,62 @@ void setDebugLog(int flag = 1)
   }
 }
 
-static void _outLog(lazy string dg)
+void _outLog(lazy string dg)
 {
     if (LogFlag) {
         append(debugLogFilename, dg());
     }
 }
 
-static void _outLoglf(lazy string dg)
+void _outLoglf(lazy string dg)
 {
     if (LogFlag) {
         append(debugLogFilename, dg() ~ "\n");
     }
 }
 
-static void _outLog2(lazy string dg1, lazy string dg2)
+void _outLog2(lazy string dg1, lazy string dg2)
 {
     if (LogFlag) {
-        string  sout = dg1() ~ format("[%s]", getDateTimeStr()) ~ dg2();
+        string  sout = dg1() ~ format("[%s]", _getDateTimeStr()) ~ dg2();
         append(debugLogFilename, sout ~ "\n");
         // writeln(debugLogFilename, sout);
         // stdout.writeln(sout);
     }
 }
 
-static void _outLogV(...)
-{
-    string str;
-    for (int i = 0; i < _arguments.length; i++) {
-        if (_arguments[i] == typeid(string)) {
-            string s = va_arg!(string)(_argptr);
-            str ~= format("%s", s);
-        } else if (_arguments[i] == typeid(int)) {
-            int n = va_arg!(int)(_argptr);
-            str ~= format("%d", n);
-        } else if (_arguments[i] == typeid(uint)) {
-            uint n = va_arg!(uint)(_argptr);
-            str ~= format("%d", n);
-        } else if (_arguments[i] == typeid(short)) {
-            short n = va_arg!(short)(_argptr);
-            str ~= format("%d", n);
-        } else if (_arguments[i] == typeid(ushort)) {
-            ushort n = va_arg!(ushort)(_argptr);
-            str ~= format("%d", n);
-        } else if (_arguments[i] == typeid(long)) {
-            long n = va_arg!(long)(_argptr);
-            str ~= format("%d", n);
-        } else if (_arguments[i] == typeid(ulong)) {
-            ulong n = va_arg!(ulong)(_argptr);
-            str ~= format("%d", n);
-        } else if (_arguments[i] == typeid(char)) {
-            char c = va_arg!(char)(_argptr);
-            str ~= format("%c", c);
-        } else if (_arguments[i] == typeid(wchar)) {
-            wchar c = va_arg!(wchar)(_argptr);
-            str ~= format("%c", c);
-        } else if (_arguments[i] == typeid(dchar)) {
-            dchar c = va_arg!(dchar)(_argptr);
-            str ~= format("%c", c);
-        } else if (_arguments[i] == typeid(byte)) {
-            byte n = va_arg!(byte)(_argptr);
-            str ~= format("%d", n);
-        } else if (_arguments[i] == typeid(ubyte)) {
-            ubyte n = va_arg!(ubyte)(_argptr);
-            str ~= format("%d", n);
-        } else if (_arguments[i] == typeid(float)) {
-            float f = va_arg!(float)(_argptr);
-            str ~= format("%f", f);
-        } else if (_arguments[i] == typeid(double)) {
-            double d = va_arg!(double)(_argptr);
-            str ~= format("%g", d);
-        } else if (_arguments[i] == typeid(wstring)) {
-            wstring s = va_arg!(wstring)(_argptr);
-            str ~= format("%s", s);
-        } else if (_arguments[i] == typeid(dstring)) {
-            dstring s = va_arg!(dstring)(_argptr);
-            str ~= format("%s", s);
-        } else if (_arguments[i] == typeid(real)) {
-            real r = va_arg!(real)(_argptr);
-            str ~= format("%g", r);
-        } else if (_arguments[i] == typeid(ifloat)) {
-            ifloat r = va_arg!(ifloat)(_argptr);
-            str ~= format("%g", r);
-        } else if (_arguments[i] == typeid(idouble)) {
-            idouble r = va_arg!(idouble)(_argptr);
-            str ~= format("%g", r);
-        } else if (_arguments[i] == typeid(ireal)) {
-            ireal r = va_arg!(ireal)(_argptr);
-            str ~= format("%g", r);
-        } else if (_arguments[i] == typeid(cfloat)) {
-            cfloat r = va_arg!(cfloat)(_argptr);
-            str ~= format("%g", r);
-        } else if (_arguments[i] == typeid(cdouble)) {
-            cdouble r = va_arg!(cdouble)(_argptr);
-            str ~= format("%g", r);
-        } else if (_arguments[i] == typeid(creal)) {
-            creal r = va_arg!(creal)(_argptr);
-            str ~= format("%g", r);
-        }
-        /++     else if (_arguments[i] == typeid(cent)) {
-            creal r = va_arg!(creal)(_argptr);
-            str ~= format("%d", r);
-        } else if (_arguments[i] == typeid(ucent)) {
-            creal r = va_arg!(creal)(_argptr);
-            str ~= format("%d", r);
-        }
-        ++/
-        else {
-            assert(0, format("Unknown type: add your type %s:%d", __FILE__, __LINE__));
-        }
+void _outLogV(A...)(A args) {
+    import std.format : formattedWrite;
+    import std.array : appender;
+    auto w = appender!string();
+    foreach (arg; args) {
+        formattedWrite(w, "%s", arg);
     }
-    _outLoglf(str);
+    _outLoglf(w.data);
 }
 
-static string getDateTimeStr()
+
+string _getDateTimeStr()
 {
     SysTime cTime = Clock.currTime();
-    string  tms = format(
-                      "%04d/%02d/%02d-%02d:%02d:%02d",
-                      cTime.year,
-                      cTime.month,
-                      cTime.day,
-                      cTime.hour,
-                      cTime.minute,
-                      cTime.second);
-    return tms;
+    return format(
+        "%04d/%02d/%02d-%02d:%02d:%02d",
+        cTime.year,
+        cTime.month,
+        cTime.day,
+        cTime.hour,
+        cTime.minute,
+        cTime.second);
 }
 
-static string getDateStr()
+static _getDateStr()
 {
     SysTime cTime = Clock.currTime();
-    string  tms = format(
-                      "%04d/%02d/%02d",
-                      cTime.year,
-                      cTime.month,
-                      cTime.day);
-    return tms;
+    return format(
+        "%04d/%02d/%02d",
+        cTime.year,
+        cTime.month,
+        cTime.day);
 }
 /++
 outdumpLog(void *, uint, string);
@@ -213,7 +130,7 @@ void outdumpLog(string file = __FILE__, int line = __LINE__, T1, T2, T3)(T1 t1, 
 if (is(T1 == void*) && is(T2 == uint) && is(T3 == string))
 {
     version (useDebugLog) {
-        _outLoglf(format("%s:%d:[%s] %s, %d byte", file, line, getDateTimeStr(), t3, t2));
+        _outLoglf(format("%s:%d:[%s] %s, %d byte", file, line, _getDateTimeStr(), t3, t2));
         _dumpLog(t1, t2);
     }
 }
@@ -224,7 +141,7 @@ outdumpLog(cast(void*)foo, foo.length, "string");
 
 void outdumpLog2(string file = __FILE__, int line = __LINE__, T...) (T t)
 {
-    format("%s:%d:[%s] ", file, line, getDateTimeStr())._outLoglf();
+    format("%s:%d:[%s] ", file, line, _getDateTimeStr())._outLoglf();
     foreach (i, v; t) {
         if (i == 1) {
             void* ptr = cast(void*)v;
